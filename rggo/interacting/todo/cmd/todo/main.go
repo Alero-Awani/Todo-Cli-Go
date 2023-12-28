@@ -1,24 +1,44 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"pragprog.com/rggo/interacting/todo"
 )
 
 //hardcoding the file name
 
-const todoFileName = ".todo.json"
+var todoFileName = ".todo.json"
+
+
 
 func main(){
+
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(),
+			"%s tool. Developed for the Pragmatic Bookshelf\n", os.Args[0])
+		fmt.Fprintf(flag.CommandLine.Output(), "Copyright 2023\n")
+		fmt.Fprintln(flag.CommandLine.Output(), "Usage Information")
+		flag.PrintDefaults()
+	}
 	//Parsing command line flags 
-	task := flag.String("task", " ", "Task to be included in the todo list")
+	add := flag.Bool("add",false, "Add task to the todo list")
 	list := flag.Bool("list", false, "List all tasks")
 	complete := flag.Int("complete", 0, "Item to be completed")
+	delete := flag.Int("delete", 0, "Delete an item from the list")
 
 	flag.Parse()
+
+	//Check if the user defined the ENV VAR for the custom file name
+	if os.Getenv("TODO_FILENAME") != ""{
+		todoFileName = os.Getenv("TODO_FILENAME")
+	}
+
 	//using the address operator & to extract the address of an empty instance of todo.List
 	l := &todo.List{}
 
@@ -32,13 +52,15 @@ func main(){
 	//using flags 
 	switch {
 	case *list:
-		//list current todo items 
-		for _,item := range *l {
-			//exclude the completed items from the output 
-			if !item.Done {
-				fmt.Println(item.Task)
-			}
-		}
+		//List current todo item by implementing fmt.Stringer interface
+		fmt.Print(l)
+		// //list current todo items 
+		// for _,item := range *l {
+		// 	//exclude the completed items from the output 
+		// 	if !item.Done {
+		// 		fmt.Println(item.Task)
+		// 	}
+		// }
 	case *complete > 0:
 		//complete the given item 
 		if err := l.Complete(*complete); err != nil {
@@ -53,23 +75,60 @@ func main(){
 		}
 	
 
-	case *task != " ":
+	case *add:
 		//Add the task 
-		l.Add(*task)
+		//when any argument(excluding flags) are provided, they will be used as the new task
+
+		t, err := getTask(os.Stdin, flag.Args()...)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		l.Add(t)
 
 		//save the new list 
 		if err := l.Save(todoFileName); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
+	case *delete > 0:
+		// delete the task
+		if err := l.Delete(*delete); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+
+		//save the new list 
+		if err := l.Save(todoFileName); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+
 	default:
 		//invalid flag provided 
 		fmt.Fprintln(os.Stderr, "Invalid Option")
 		os.Exit(1)
 	}
+}
 
 
+//getTask function decides where to get the description for a new 
+//task from , args or STDIN
 
+func getTask(r io.Reader, args ...string)(string, error){
+	if len(args) > 0 {
+		return strings.Join(args, " "), nil
+	}
+
+	s := bufio.NewScanner(r)
+	s.Scan()
+	if err := s.Err(); err != nil {
+		return "", err
+	}
+
+	if len(s.Text()) == 0 {
+		return "", fmt.Errorf("Task cannot be blank")
+	}
+
+	return s.Text(),nil
 
 }
 

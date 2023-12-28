@@ -44,6 +44,7 @@ func TestMain(m *testing.M) {
 func TestTodoCLI(t *testing.T) {
 	//define the task name 
 	task := "test task number 1"
+	// num := 1
 
 	dir, err := os.Getwd()
 	if err != nil {
@@ -67,12 +68,24 @@ func TestTodoCLI(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		expected := task + "\n"
+		expected := fmt.Sprintf("  1: %s\n", task)
 
 		if expected != string(out) {
 			t.Errorf("Expected %q, got %q instead\n", expected, string(out))
 		}
 	})
+
+	//test to ensure that the tool deletes a task
+	// t.Run("DeleteTasks", func(t *testing.T){
+	// 	cmd := exec.Command(cmdPath, "-delete", num)
+	// 	if err := cmd.Run(); err != nil {
+	// 		t.Fatal(err)
+	// 	}
+	// })
 }
 
 //what happens here is the code in test main runs first, then when m.Run is called , the tests then run 
+
+
+//these tests above are integration tests which are used to test the user interface, they can be used to test the expected output 
+//in line with the api(todo.go)

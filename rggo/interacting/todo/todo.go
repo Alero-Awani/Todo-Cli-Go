@@ -18,6 +18,23 @@ type item struct {
 
 type List []item//a list of struct item
 
+//string() prints out a formatted list and implements the fmt.Stringer interface
+func (l *List) String() string {
+	formatted := ""
+
+	for i, t := range *l {
+		prefix := "  "
+
+		if t.Done {
+			prefix = "X "
+		}
+
+		//Adjust the item number k to print numbers starting from 1 instead of 0
+		formatted += fmt.Sprintf("%s%d: %s\n", prefix, i+1, t.Task)
+	}
+	return formatted
+}
+
 // add method creates a new todo item and appends it to the list
 func (l *List) Add(task string){
 	t := item{
