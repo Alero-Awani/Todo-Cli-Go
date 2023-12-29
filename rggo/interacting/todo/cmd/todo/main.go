@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"pragprog.com/rggo/interacting/todo"
 )
@@ -31,6 +32,8 @@ func main(){
 	list := flag.Bool("list", false, "List all tasks")
 	complete := flag.Int("complete", 0, "Item to be completed")
 	delete := flag.Int("delete", 0, "Delete an item from the list")
+	pending := flag.Bool("pending", false, "Show only tasks that have not been completed")
+	verbose := flag.Bool("v", false, "Show extra information")
 
 	flag.Parse()
 
@@ -101,6 +104,23 @@ func main(){
 		if err := l.Save(todoFileName); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
+	case *pending:
+		//print takes in l as an input
+		//a list that doesnt contain the ones with done as true 
+
+		for i, item := range *l {
+			if !item.Done{
+				fmt.Printf("  %d: %s\n", i+1, item.Task)
+			}
+		}
+	case *verbose:
+		//prints out the time it was created and completed in a good format 
+		for i, item := range *l {		
+			fmt.Printf("  %d: %s\n", i+1, item.Task)
+			fmt.Println(" Created At: ",item.CreatedAt.Format(time.RFC1123))
+		}
+		
+
 
 	default:
 		//invalid flag provided 
