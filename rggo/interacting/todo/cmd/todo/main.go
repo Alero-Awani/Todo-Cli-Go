@@ -87,7 +87,9 @@ func main(){
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		l.Add(t)
+		for _, task := range t {
+			l.Add(task)
+		}
 
 		//save the new list 
 		if err := l.Save(todoFileName); err != nil {
@@ -133,22 +135,39 @@ func main(){
 //getTask function decides where to get the description for a new 
 //task from , args or STDIN
 
-func getTask(r io.Reader, args ...string)(string, error){
+func getTask(r io.Reader, args ...string)([]string, error){
 	if len(args) > 0 {
-		return strings.Join(args, " "), nil
+		task := strings.Join(args, " ")
+		var tasks []string
+
+		tasks = append(tasks, task)
+
+		return tasks, nil
 	}
 
 	s := bufio.NewScanner(r)
-	s.Scan()
+
+	var lines []string
+	for {
+		s.Scan()
+		line := s.Text()
+
+		//break the loop if the line is empty
+		if len(line) == 0 {
+			break
+		}
+		lines = append(lines,line)
+	}
+	
 	if err := s.Err(); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	if len(s.Text()) == 0 {
-		return "", fmt.Errorf("Task cannot be blank")
+	if len(lines) == 0 {
+		return nil, fmt.Errorf("Task cannot be blank")
 	}
 
-	return s.Text(),nil
+	return lines,nil
 
 }
 

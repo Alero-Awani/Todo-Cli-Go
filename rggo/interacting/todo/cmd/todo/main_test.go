@@ -14,7 +14,7 @@ import (
 
 var (
 	binName = "todo"
-	fileName = ".todo.json"
+	fileName = os.Getenv("TODO_FILENAME")
 )
 
 
@@ -25,8 +25,11 @@ func TestMain(m *testing.M) {
 		binName += ".exe"
 	}
 
+	//the test file has access to the main file because it actually builds it to a binary
+
 	build := exec.Command("go", "build", "-o", binName)
 
+	//running the build here 
 	if err := build.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Cannot build tool %s: %s", binName, err)
 		os.Exit(1)
@@ -107,3 +110,8 @@ func TestTodoCLI(t *testing.T) {
 
 //these tests above are integration tests which are used to test the user interface, they can be used to test the expected output 
 //in line with the api(todo.go)
+
+
+
+
+//these tests use the 
